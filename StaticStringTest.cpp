@@ -13,18 +13,24 @@ template <std::make_signed_t<std::size_t> n>
 constexpr std::size_t width<n, std::enable_if_t<(n < 0)>> = 1 + width<-n>;
 
 template <std::make_signed_t<std::size_t> n, std::size_t i>
-constexpr std::make_signed_t<std::size_t> cpow = n * cpow<n, i - 1>;
+constexpr std::make_signed_t<std::size_t> cpow_imp_0 = n;
+template <std::make_signed_t<std::size_t> n, std::size_t... I>
+constexpr std::make_signed_t<std::size_t>
+cpow_imp_1(std::index_sequence<I...>) {
+  return (cpow_imp_0<n, I> * ...);
+}
+template <std::make_signed_t<std::size_t> n, std::size_t i>
+constexpr std::make_signed_t<std::size_t> cpow =
+    cpow_imp_1<n>(std::make_index_sequence<i>());
 template <std::make_signed_t<std::size_t> n>
 constexpr std::make_signed_t<std::size_t> cpow<n, 0> = 1;
-
 template <std::make_signed_t<std::size_t> n, std::size_t i,
           typename = std::enable_if_t<(i < width<n>)>>
 constexpr static_string<1> digit = {
     static_cast<char>('0' + static_cast<char>(n / cpow<10, i> % 10))};
-
 template <std::make_signed_t<std::size_t> n, std::size_t... I>
 constexpr static_string<width<n>> str_imp(std::index_sequence<I...>) {
-  return static_string{""} + (... + digit<n, width<n> - 1 - I>);
+  return (digit<n, width<n> - 1 - I> + ...);
 }
 template <std::make_signed_t<std::size_t> n, typename = void>
 constexpr static_string<width<n>> str =
@@ -49,8 +55,5 @@ constexpr auto make_table_imp(std::index_sequence<I...>) {
 }
 template <std::size_t l>
 constexpr auto make_table = make_table_imp(std::make_index_sequence<l>());
-#include <iostream>
-int main() {
-  //   std::cout << a.data << b.data << c.data;
-  std::cout << make_table<50>.data;
-}
+#include <cstdio>
+int main() { std::puts(make_table<50>.data); }
