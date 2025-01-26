@@ -1,3 +1,4 @@
+// require C++17 for CTAD
 #pragma once
 #include <cstddef>
 #include <utility>
