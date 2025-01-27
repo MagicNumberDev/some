@@ -1,19 +1,36 @@
 // require C++17 for CTAD
 #pragma once
 #include <cstddef>
+#include <type_traits>
 #include <utility>
+
 template <std::size_t N> struct static_string {
   char data[N + 1];
+  constexpr static std::size_t length = N;
   constexpr auto &operator[](std::size_t i) { return data[i]; }
   constexpr auto &operator[](std::size_t i) const { return data[i]; }
   constexpr static_string() : data{0} {}
   template <std::size_t... I>
-  constexpr static_string(const char (&str)[N + 1], std::index_sequence<I...>)
+  constexpr static_string(const char (&str)[length + 1],
+                          std::index_sequence<I...>)
       : data{str[I]..., '\0'} {}
-  constexpr static_string(const char (&str)[N + 1])
-      : static_string{str, std::make_index_sequence<N>()} {}
+  constexpr static_string(const char (&str)[length + 1])
+      : static_string{str, std::make_index_sequence<length>()} {}
   template <typename... Ts>
   constexpr static_string(const Ts &...str) : data{str...} {}
+  constexpr auto *begin() { return data; }
+  constexpr auto *begin() const { return data; }
+  constexpr auto *end() { return data + length; }
+  constexpr auto *end() const { return data + length; }
+  template <std::size_t begin, std::size_t count, std::size_t... I>
+  constexpr static_string<count> substr(std::index_sequence<I...>) const {
+    return static_string<count>{data[begin + I]..., '\0'};
+  }
+  template <std::size_t begin, std::size_t count,
+            typename = std::enable_if_t<(begin + count <= length)>>
+  constexpr static_string<count> substr() const {
+    return substr<begin, count>(std::make_index_sequence<count>());
+  }
 };
 template <std::size_t N>
 static_string(const char (&)[N]) -> static_string<N - 1>;
