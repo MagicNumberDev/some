@@ -62,3 +62,27 @@ constexpr static_string<N> operator+(const static_string<0> &a,
                                      const static_string<N> &b) {
   return b;
 }
+template <std::size_t I, std::size_t N>
+constexpr bool same(const static_string<N> &a, const static_string<N> &b) {
+  return a[I] == b[I];
+}
+template <std::size_t N, std::size_t... I>
+constexpr bool same(const static_string<N> &a, const static_string<N> &b,
+                    std::index_sequence<I...>) {
+  return (same<I>(a, b) && ...);
+}
+template <std::size_t N>
+constexpr bool operator==(const static_string<N> &a,
+                          const static_string<N> &b) {
+  return same(a, b, std::make_index_sequence<N>());
+}
+template <std::size_t N1, std::size_t N2>
+constexpr bool operator==(const static_string<N1> &a,
+                          const static_string<N2> &b) {
+  return false;
+}
+template <std::size_t N1, std::size_t N2>
+constexpr bool operator!=(const static_string<N1> &a,
+                          const static_string<N2> &b) {
+  return !(a == b);
+}
